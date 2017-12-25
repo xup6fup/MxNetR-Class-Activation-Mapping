@@ -32,6 +32,10 @@ for (i in 1:6) {
   relu1_output = which(all_layers$outputs == 'relu1_output') %>% all_layers$get.output()
   softmax_output = which(all_layers$outputs == 'softmax_output') %>% all_layers$get.output()
   
+  #Note-1: 'tail(all_layers$outputs, 20)' can be used to understand the last few layers of your network.
+  #Note-2: 'mx.symbol.infer.shape(relu1_output, data = c(224, 224, 1, 1))$out.shapes' can be used to understand
+  #        output shape of specific layer.
+  
   out = mx.symbol.Group(c(relu1_output, softmax_output))
   executor = mx.simple.bind(symbol = out, data = c(224, 224, 3, 1), ctx = mx.cpu())
   
