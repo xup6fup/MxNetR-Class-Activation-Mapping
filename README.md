@@ -10,7 +10,7 @@ As illustrated in above figure, global average pooling (GAP) outputs the spatial
 
 Fortunately, some of popular networks such as DenseNet, SqueezeNet, ResNet already use global average pooling (GAP) at the end, so we can directly use pre-trained model to generate the class activation mapping (CAM) without any modification. Here is a sample script to generate class activation mapping (CAM) by a pre-trained DenseNet-169. 
 
-Note: The pre-trained DenseNet-169 parameters by MxNet can be download from [here](https://drive.google.com/open?id=1rcLiIeyXiSYU10Ce-1UpqO3sNalaIZ5M), and this is contributed by [bruinxiong/densenet.mxnet](https://github.com/bruinxiong/densenet.mxnet). After download, you can put this file in the 'model' directory.
+Note: If you cannot find the 'densenet-imagenet-169-0-0125.params' file in 'model' directory, you can download it from [here](https://drive.google.com/open?id=1rcLiIeyXiSYU10Ce-1UpqO3sNalaIZ5M). This pre-trained parameter is contributed by [bruinxiong/densenet.mxnet](https://github.com/bruinxiong/densenet.mxnet). After download, you can put this file in the 'model' directory.
 
 ## Requirements
 
