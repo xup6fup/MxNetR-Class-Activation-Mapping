@@ -4,7 +4,7 @@ library(mxnet)
 
 Dense_model = mx.model.load('model/densenet-imagenet-169-0', 125)
 
-img_path = paste0('image/6.jpg')
+img_path = paste0('image/multi animals.jpg')
 img <- load.image(img_path)
 
 #Function
@@ -121,4 +121,4 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
 
 #Use this function!
 
-CAM(img, show.object = 5, chinese_label = TRUE)
+CAM(img, show.object = 3, chinese_label = FALSE)
