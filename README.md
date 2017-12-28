@@ -47,7 +47,7 @@ install.packages(c('magrittr', 'imager'))
 
 ## Start to try
 
-The example code can be found from ['code/Class-Activation-Mapping.R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Class-Activation-Mapping.R). The output is shown as following:
+The example code can be found from ['code/Class-Activation-Mapping.R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Class-Activation-Mapping.R). The output is shown as following, and the integration function was been coded in ['code/Single fucntion.R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Single fucntion.R).
 
 <img src="image/F2.jpg" width="835" height="626" alt="F2"/>
 
