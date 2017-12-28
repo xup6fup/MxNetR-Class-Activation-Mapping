@@ -22,6 +22,13 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
   #Resized the image
   
   dim_img <- dim(img)
+  if (dim_img[1] <= dim_img[2]) {
+    dim_img[2] = dim_img[2]/dim_img[1]*224
+    dim_img[1] = 224
+  } else {
+    dim_img[1] = dim_img[1]/dim_img[2]*224
+    dim_img[2] = 224
+  }
   dim_x <- round(dim_img[1]/32) * 32
   dim_y <- round(dim_img[2]/32) * 32
   
@@ -131,8 +138,4 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
 
 #Use this function!
 
-pdf('test.pdf', width = 8.4, height = 5.4)
-
-CAM(img, show.object = 3, chinese_label = FALSE)
-
-dev.off()
+CAM(img, show.object = 5, chinese_label = FALSE)
