@@ -4,12 +4,12 @@ library(mxnet)
 
 Dense_model = mx.model.load('model/densenet-imagenet-169-0', 125)
 
-img_path = paste0('image/1.jpg')
+img_path = paste0('image/6.jpg')
 img <- load.image(img_path)
 
 #Function
 
-CAM = function (img) {
+CAM = function (img, show.object = 1, chinese_label = FALSE) {
   
   require(imager)
   require(EBImage)  
@@ -22,10 +22,20 @@ CAM = function (img) {
   
   #Visualization
   
-  par(mai = rep(0, 4), mfrow = c(1, 2))
+  if (show.object < 1) {
+    stop('Please enter a value of show.object from 1 to 5.')
+  } else if (show.object == 1) {
+    par(mai = rep(0, 4), mfrow = c(1, 2))
+  } else if (show.object <= 3) {
+    par(mai = rep(0, 4), mfrow = c(2, 2))
+  } else if (show.object <= 5) {
+    par(mai = rep(0, 4), mfrow = c(2, 3))
+  } else {.
+    stop('You cannot show more than 5 predictions in single plot, please modify this function.')
+  }
+
   plot(resized_img, axes = FALSE)
   img <- resized_img %>% grayscale()
-  plot(img, axes = FALSE)
   
   #Extract the feature map from DenseNet
   
@@ -55,23 +65,31 @@ CAM = function (img) {
   
   #Get the prediction output
   
-  pred_pos = which.max(as.array(executor$ref.outputs$softmax_output))
-  label_names = readLines('http://data.dmlc.ml/mxnet/models/imagenet/synset.txt')
-  print(label_names[pred_pos])
+  pred_prob = as.array(executor$ref.outputs$softmax_output)
+  pred_pos = order(pred_prob, decreasing = TRUE)[1:show.object]
+  if (chinese_label) {
+    label_names = readLines('model/chinese synset.txt')
+  } else {
+    label_names = readLines('model/synset.txt')
+  }
+  Encoding(label_names) = 'UTF-8'
+  print(paste0(label_names[pred_pos], ' (prob = ', formatC(pred_prob[pred_pos], 3, format = 'f'), ')'))
   
   #Weithged sum of feature map: the core of class activation mapping (CAM)
   
-  for (i in 1:1664) {
-    if (i == 1) {
-      CAM_ = feature[,,i,] * FC_weight[i, pred_pos] 
-    } else {
-      CAM_ = CAM_ + feature[,,i,] * FC_weight[i, pred_pos] 
+  CAM_list = list()
+  
+  for (j in 1:show.object) {
+    for (i in 1:1664) {
+      if (i == 1) {
+        CAM_list[[j]] = feature[,,i,] * FC_weight[i, pred_pos[j]] 
+      } else {
+        CAM_list[[j]] = CAM_list[[j]] + feature[,,i,] * FC_weight[i, pred_pos[j]] 
+      }
     }
+    #Standardization from 0 to 1
+    CAM_list[[j]] = (CAM_list[[j]] - min(CAM_list[[j]]))/(max(CAM_list[[j]]) - min(CAM_list[[j]])) 
   }
-  
-  #Standardization from 0 to 1
-  
-  CAM_ = (CAM_ - min(CAM_))/(max(CAM_) - min(CAM_)) 
   
   #Define the color
   
@@ -82,21 +100,25 @@ CAM = function (img) {
   
   w = makeBrush(size = 7, shape = 'gaussian', sigma = 2)
   
-  CAM = EBImage::resize(CAM_, 224, 224) %>% filter2(., w)
-  CAM = round(CAM*255)+1 %>% as.integer()
-  FINAL_CAM = cols[CAM] %>% paste0(., "80") %>% matrix(., 224, 224, byrow = TRUE) %>% .[224:1,] %>% as.raster()
+  Resized_CAM_list = list()
   
-  #Visualization
+  for (j in 1:show.object) {
+    Resized_CAM_list[[j]] = EBImage::resize(CAM_list[[j]], 224, 224) %>% filter2(., w)
+    Resized_CAM_list[[j]] = round(Resized_CAM_list[[j]]*255)+1 %>% as.integer()
+    Resized_CAM_list[[j]] = cols[Resized_CAM_list[[j]]] %>% paste0(., "80") %>% matrix(., 224, 224, byrow = TRUE) %>% .[224:1,] %>% as.raster()
+  }
   
-  plot(FINAL_CAM, add = TRUE)
+  #Visualization and show the prediction output
   
-  #Show the prediction output
-  
-  obj = label_names[pred_pos]
-  legend('bottomright', paste0(substr(obj, 11, nchar(obj)), ' (prob = ', round(as.array(executor$ref.outputs$softmax_output)[pred_pos], 3), ')'), bg = 'gray90')
+  for (j in 1:show.object) {
+    plot(img, axes = FALSE)
+    plot(Resized_CAM_list[[j]], add = TRUE)
+    obj = label_names[pred_pos[j]]
+    legend('bottomright', paste0(substr(obj, 11, nchar(obj)), ' (prob = ', formatC(pred_prob[pred_pos[j]], 3, format = 'f'), ')'), bg = 'gray90')
+  }
   
 }
 
 #Use this function!
 
-CAM(img)
+CAM(img, show.object = 5, chinese_label = TRUE)
