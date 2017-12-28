@@ -51,9 +51,13 @@ The example code can be found from ['code/Class-Activation-Mapping.R'](https://g
 
 <img src="image/F2.jpg" width="835" height="626" alt="F2"/>
 
-The integration function was been coded in ['code/Single fucntion.R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Single%20function.R), it also support chinese labels.
+The function was been coded in ['code/Single fucntion.R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Single%20function.R), it also support chinese labels.
 
-<img src="image/F3.jpg" width="500" height="500" alt="F3"/>
+<img src="image/F3.jpg" width="700" height="700" alt="F3"/>
+
+It's worth noting that denseNet can be applied to image with any size after a minor modification. The function was been coded in  ['code/Single function (support any size).R'](https://github.com/xup6fup/Class-Activation-Mapping-CAM-in-MxNet/blob/master/code/Single%20function%20(support%20any%20size).R). However, because the limitation about architecture, the image size must be resized to multiple of 32. Moreover, this modification will decrease the accuracy.
+
+<img src="image/F4.jpg" width="890" height="572" alt="F4"/>
 
 ## Other pre-trained MxNet Network
 

@@ -1,3 +1,7 @@
+#Note: Although the revised denseNet can support image with any size,
+#but it also have some limitation because its architecture. The image
+#size must be resized to multiple of 32.
+
 library(mxnet)
 library(imager)
 
@@ -5,7 +9,7 @@ library(imager)
 
 Dense_model = mx.model.load('model/densenet-imagenet-169-0', 125)
 
-img_path = paste0('image/multi animals.jpg')
+img_path = paste0('image/informal image.jpg')
 img <- load.image(img_path)
 
 #Function
@@ -17,8 +21,12 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
   
   #Resized the image
   
-  resized_img <- resize(img, 224, 224)
-  X = array(resized_img, dim = c(224, 224, 3, 1)) * 256
+  dim_img <- dim(img)
+  dim_x <- round(dim_img[1]/32) * 32
+  dim_y <- round(dim_img[2]/32) * 32
+  
+  resized_img <- resize(img, dim_x, dim_y)
+  X = array(resized_img, dim = c(dim_x, dim_y, 3, 1)) * 256
   
   #Visualization
   
@@ -41,14 +49,16 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
   
   all_layers = Dense_model$symbol$get.internals()
   relu1_output = which(all_layers$outputs == 'relu1_output') %>% all_layers$get.output()
-  softmax_output = which(all_layers$outputs == 'softmax_output') %>% all_layers$get.output()
+  pool1_output = mx.symbol.mean(relu1_output, axis = c(2, 3), name = 'pool1_output')
+  fc1 = mx.symbol.FullyConnected(pool1_output, name = 'fc1', num.hidden = 1000)
+  softmax = mx.symbol.SoftmaxOutput(fc1, name = 'softmax')
   
   #Note-1: 'tail(all_layers$outputs, 20)' can be used to understand the last few layers of your network.
-  #Note-2: 'mx.symbol.infer.shape(relu1_output, data = c(224, 224, 3, 1))$out.shapes' can be used to understand
-  #        output shape of the intrested layer.
+  #Note-2: 'mx.symbol.infer.shape(relu1_output, data = c(dim_x, dim_y, 3, 1))$out.shapes' can be used to
+  #        understand output shape of the intrested layer.
   
-  out = mx.symbol.Group(c(relu1_output, softmax_output))
-  executor = mx.simple.bind(symbol = out, data = c(224, 224, 3, 1), ctx = mx.cpu())
+  out = mx.symbol.Group(c(relu1_output, softmax))
+  executor = mx.simple.bind(symbol = out, data = c(dim_x, dim_y, 3, 1), ctx = mx.cpu())
   
   mx.exec.update.arg.arrays(executor, Dense_model$arg.params, match.name = TRUE)
   mx.exec.update.aux.arrays(executor, Dense_model$aux.params, match.name = TRUE)
@@ -96,16 +106,16 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
   cols <-  colorRampPalette(c("#000099", "#00FEFF", "#45FE4F", 
                               "#FCFF00", "#FF9400", "#FF3100"))(256)
   
-  #Enlarge the class activation mapping (7*7 to 224*224) and fuzzification
+  #Enlarge the class activation mapping and fuzzification
   
   w = makeBrush(size = 7, shape = 'gaussian', sigma = 2)
   
   Resized_CAM_list = list()
   
   for (j in 1:show.object) {
-    Resized_CAM_list[[j]] = EBImage::resize(CAM_list[[j]], 224, 224) %>% filter2(., w)
+    Resized_CAM_list[[j]] = EBImage::resize(CAM_list[[j]], dim_x, dim_y) %>% filter2(., w)
     Resized_CAM_list[[j]] = round(Resized_CAM_list[[j]]*255)+1 %>% as.integer()
-    Resized_CAM_list[[j]] = cols[Resized_CAM_list[[j]]] %>% paste0(., "80") %>% matrix(., 224, 224) %>% .[,224:1] %>% t() %>% as.raster()
+    Resized_CAM_list[[j]] = cols[Resized_CAM_list[[j]]] %>% paste0(., "80") %>% matrix(., dim_x, dim_y) %>% .[,dim_y:1] %>% t() %>% as.raster()
   }
   
   #Visualization and show the prediction output
@@ -121,4 +131,8 @@ CAM = function (img, show.object = 1, chinese_label = FALSE) {
 
 #Use this function!
 
-CAM(img, show.object = 3, chinese_label = T)
+pdf('test.pdf', width = 8.4, height = 5.4)
+
+CAM(img, show.object = 3, chinese_label = FALSE)
+
+dev.off()
